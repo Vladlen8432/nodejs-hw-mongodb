@@ -5,6 +5,7 @@ import expressPinoLogger from "express-pino-logger";
 import contactsRouter from "./routes/contactsRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFoundHandler from "./middlewares/notFoundHandler.js";
+import authRouter from "./routes/auth.js";
 
 const logger = pino();
 const expressLogger = expressPinoLogger({ logger });
@@ -16,6 +17,7 @@ function setupServer() {
   app.use(expressLogger);
   app.use(express.json());
 
+  app.use("/auth", authRouter);
   app.use("/contacts", contactsRouter);
 
   app.use(notFoundHandler);

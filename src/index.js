@@ -7,3 +7,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Крок 4
