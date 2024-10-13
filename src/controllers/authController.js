@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import { registerUser } from "../services/auth.js";
+import { deleteSession, registerUser } from "../services/auth.js";
 import User from "../models/user.js";
 import Session from "../models/session.js";
 import jwt from "jsonwebtoken";
@@ -139,6 +139,24 @@ export const refreshSessionController = async (req, res, next) => {
         accessToken,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logoutController = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return next(createHttpError(401, "No refresh token provided"));
+    }
+
+    await deleteSession(refreshToken);
+
+    res.clearCookie("refreshToken");
+
+    return res.status(204).send();
   } catch (error) {
     next(error);
   }

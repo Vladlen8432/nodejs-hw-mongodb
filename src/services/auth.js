@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
+import Session from "../models/session.js";
 
 export const registerUser = async ({ name, email, password }) => {
   const newUser = new User({
@@ -27,4 +28,14 @@ export const loginUser = async ({ email, password }) => {
   }
 
   return user;
+};
+
+export const deleteSession = async (refreshToken) => {
+  const session = await Session.findOneAndDelete({ refreshToken });
+
+  if (!session) {
+    throw createHttpError(404, "Session not found");
+  }
+
+  return session;
 };
