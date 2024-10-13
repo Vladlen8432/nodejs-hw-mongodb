@@ -95,3 +95,51 @@ export const loginController = async (req, res, next) => {
     next(error);
   }
 };
+
+export const refreshSessionController = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return next(createHttpError(401, "No refresh token provided"));
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+      console.error("JWT verification error:", error);
+      return next(createHttpError(401, "Invalid or expired refresh token"));
+    }
+
+    await Session.findOneAndDelete({ userId: decoded.id });
+
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.id);
+
+    const newSession = new Session({
+      userId: decoded.id,
+      accessToken,
+      refreshToken: newRefreshToken,
+      accessTokenValidUntil: new Date(Date.now() + 15 * 60 * 1000),
+      refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+
+    await newSession.save();
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      status: 200,
+      message: "Successfully refreshed a session!",
+      data: {
+        accessToken,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

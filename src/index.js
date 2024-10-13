@@ -8,4 +8,4 @@ const startServer = async () => {
 
 startServer();
 
-// Крок 4
+// Крок 5
