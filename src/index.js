@@ -7,5 +7,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-// Test
