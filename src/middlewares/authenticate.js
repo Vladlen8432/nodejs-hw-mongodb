@@ -1,32 +1,62 @@
 import jwt from "jsonwebtoken";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 import User from "../models/user.js";
 
 const authenticate = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const { authorization = "" } = req.headers;
+  const [bearer, token] = authorization.split(" ");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(createHttpError(401, "Access token missing or malformed"));
+  if (bearer !== "Bearer" || !token) {
+    return next(createError(401, "Not authorized"));
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    const { id } = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(id);
 
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return next(createHttpError(401, "User not found"));
+    if (!user || !user.token) {
+      return next(createError(401, "Not authorized"));
     }
 
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return next(createHttpError(401, "Access token expired"));
-    }
-    next(createHttpError(401, "Invalid access token"));
+    next(createError(401, "Not authorized"));
+    console.error(error);
   }
 };
 
 export default authenticate;
+
+// import jwt from "jsonwebtoken";
+// import createHttpError from "http-errors";
+// import User from "../models/user.js";
+
+// const authenticate = async (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+
+//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//     return next(createHttpError(401, "Access token missing or malformed"));
+//   }
+
+//   const token = authHeader.split(" ")[1];
+
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+
+//     const user = await User.findById(decoded.id);
+//     if (!user) {
+//       return next(createHttpError(401, "User not found"));
+//     }
+
+//     req.user = user;
+//     next();
+//   } catch (error) {
+//     if (error.name === "TokenExpiredError") {
+//       return next(createHttpError(401, "Access token expired"));
+//     }
+//     next(createHttpError(401, "Invalid access token"));
+//   }
+// };
+
+// export default authenticate;
