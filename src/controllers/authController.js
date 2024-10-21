@@ -163,21 +163,3 @@ export const logoutController = async (req, res, next) => {
     next(error);
   }
 };
-
-// export const logoutController = async (req, res, next) => {
-//   try {
-//     const { refreshToken } = req.cookies;
-
-//     if (!refreshToken) {
-//       return next(createHttpError(401, "No refresh token provided"));
-//     }
-
-//     await deleteSession(refreshToken);
-
-//     res.clearCookie("refreshToken");
-
-//     return res.status(204).send();
-//   } catch (error) {
-//     next(error);
-//   }
-// };
